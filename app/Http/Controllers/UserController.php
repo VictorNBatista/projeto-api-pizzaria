@@ -86,24 +86,29 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Validar os dados recebidos
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+        $user = User::find($id);
+
+        // Verifica se o User mencionado existe ou nao
+        if (!$user) {
+            return response()->json([
+                'status' => 404,
+                'mensagem' => 'Usuário não encontrado!'
+            ], 404);
+        }
+
+        // Recebe e atualiza os dados do usuario
+        $user->update([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => $request->input('password') ? bcrypt($request->input('password')) : $user->password,
         ]);
 
-        // Encontrar o usuário pelo ID
-        $user = User::findOrFail($id);
-
-        // Atualizar os dados do usuário
-        $user->name = $validatedData['name'];
-        $user->email = $validatedData['email'];
-
-        // Salvar as alterações no banco de dados
-        $user->save();
-
-        // Retornar uma resposta de sucesso
-        return response()->json(['message' => 'User updated successfully'], 200);
+        // Caso de certo, retorna a mensagem positiva
+        return response()->json([
+            'status' => 200,
+            'mensagem' => 'Usuário atualizado com sucesso!',
+            'user' => $user
+        ]);
     }
 
     /**
@@ -111,14 +116,14 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        // Encontrar o usuário pelo ID
+        // Encontra o usuário pelo ID e deleta
         $user = User::findOrFail($id);
-
-        // Deletar o usuário do banco de dados
         $user->delete();
 
-        // Retornar uma resposta de sucesso
-        return response()->json(['message' => 'User deleted successfully'], 200);
+        return response()->json([
+            'status' => 200,
+            'menssagem' => 'Usuário deletado com sucesso!!',
+        ], 200);
     }
 
 }
